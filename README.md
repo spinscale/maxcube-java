@@ -10,7 +10,15 @@ eq3 is licensed under Apache 2 License.
 
 ## Installation
 
-Before installing eq3, you should install java8, which is the only dependency.
+Before installing eq3, you should install java8, which is the only dependency. Now you can download the tar.gz archive from the releases page, and run
+
+``` 
+tar zxvf eq3-0.0.1.tar.gz
+./cli-0.0.1/bin/eq3 version
+./cli-0.0.1/bin/eq3
+``` 
+
+You should see the downloaded version and a help page.
 
 ## CLI - Usage
 
