@@ -44,6 +44,56 @@ public class Generator {
         bos.write(address);
     }
 
+    public static String writeBoostRequest(Room room) throws IOException {
+        Device thermostat = room.findThermostat();
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+            writeSetTemperatureRequest(bos, room.getId(), thermostat.getRfaddress());
+            // mode & temperature, boost mode is 11 at the beginning, temperature does not matter
+            bos.write(192);
+
+            String base64 = Base64.getEncoder().encodeToString(bos.toByteArray());
+            return "s:" + base64;
+        }
+    }
+
+    /**
+     * https://github.com/Bouni/max-cube-protocol/blob/master/S-Message.md
+     */
+    public static String writeSetTemperatureRequest(Room room, double temperature) throws
+        IOException {
+        if (temperature < 0 || temperature > 31) {
+            throw new IllegalArgumentException("Temperature must be between 0 and 31 °C");
+        }
+
+        double doubledTemp = temperature * 2;
+        double isIntegerOrDotFive = doubledTemp % 2;
+
+        if (isIntegerOrDotFive == 1 || isIntegerOrDotFive == 0) {
+            Device thermostat = room.findThermostat();
+            try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+                writeSetTemperatureRequest(bos, room.getId(), thermostat.getRfaddress());
+                /*
+                hex:  |    66     |
+                dual: | 0110 1100 |
+                        |||| ||||
+                        ||++-++++-- temperature: 10 1100 -> 38 = temp * 2
+                        ||                     (to get the temperature, the value must be divided by 2: 38/2 = 19)
+                        ++--------- mode:
+                                    00=auto/weekly program
+                                    01=manual ( => 0100 0000 => Decimal 64)
+                                    10=vacation
+                                    11=boost */
+                bos.write(64 + (int) doubledTemp);
+
+                String base64 = Base64.getEncoder().encodeToString(bos.toByteArray());
+                return "s:" + base64;
+            }
+        }
+        else {
+            throw new IllegalArgumentException("only xx.5 is supported");
+        }
+    }
+
     public static String writeHolidayRequest(Room room, LocalDateTime endDate, int temperature) throws IOException {
         if (temperature > 31) {
             throw new IllegalArgumentException("Temperature must be between 0 and 31 °C");
@@ -106,22 +156,13 @@ public class Generator {
         bos.write(halfhours);
     }
 
-    public static String writeBoostRequest(Room room) throws IOException {
-        Device thermostat = room.findThermostat();
-        try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
-            writeSetTemperatureRequest(bos, room.getId(), thermostat.getRfaddress());
-            // mode & temperature, boost mode is 11 at the beginning, temperature does not matter
-            bos.write(192);
-
-            String base64 = Base64.getEncoder().encodeToString(bos.toByteArray());
-            return "s:" + base64;
-        }
-    }
-
+    /**
+     * https://github.com/Bouni/max-cube-protocol/blob/master/S-Message.md
+     */
     private static void writeSetTemperatureRequest(ByteArrayOutputStream bos, int roomId, int thermostatRfAddress) {
         bos.write(0); // unknown
         bos.write(4); // rf flags
-        bos.write(64); // command
+        bos.write(64); // 0x40 => 64 (decimal) => Set temperature
 
         // rf address from
         Generator.writeRfAddress(0, bos);
