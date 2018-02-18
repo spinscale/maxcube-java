@@ -55,14 +55,15 @@ public class Cli {
 
         // argument parsing
         io.airlift.airline.Cli.CliBuilder<Runnable> builder = io.airlift.airline.Cli.<Runnable>builder("eq3")
-                .withCommands(Help.class, Info.class, Discover.class, Version.class, Boost.class, Holiday.class)
-                .withDescription("Tool to manage Max!EQ3 cubes from the command line")
-                .withDefaultCommand(Help.class);
+            .withCommands(Help.class, Info.class, Discover.class, Version.class, Boost.class, Holiday.class,
+                ManualTemperature.class)
+            .withDescription("Tool to manage Max!EQ3 cubes from the command line")
+            .withDefaultCommand(Help.class);
 
         builder.withGroup("report")
-                .withDescription("Reporting to a configurable backend")
-                .withCommands(ReportCli.class)
-                .withDefaultCommand(Help.class);
+            .withDescription("Reporting to a configurable backend")
+            .withCommands(ReportCli.class)
+            .withDefaultCommand(Help.class);
 
         io.airlift.airline.Cli<Runnable> gitParser = builder.build();
         gitParser.parse(args).run();
@@ -138,7 +139,7 @@ public class Cli {
         @Arguments(description = "host of cube to query")
         public String host;
 
-        abstract void doRun(String host) throws Exception ;
+        abstract void doRun(String host) throws Exception;
 
         @Override
         void doRun() throws Exception {
@@ -159,7 +160,7 @@ public class Cli {
         @Arguments(description = "interface to scan on, i.e. eth0/en0", required = true)
         public String networkInterface;
 
-        @Option(name = { "-t", "timeout" } , description = "Time to wait for responses, in seconds, defaults to 2")
+        @Option(name = {"-t", "timeout"}, description = "Time to wait for responses, in seconds, defaults to 2")
         public Integer timeout = 2;
 
         public void doRun() throws Exception {
@@ -172,7 +173,7 @@ public class Cli {
     @Command(name = "boost", description = "Boost a room")
     public static class Boost extends CubeHostCommand {
 
-        @Option(name = { "-r", "--room" } , description = "The name of the room to boost", required = true)
+        @Option(name = {"-r", "--room"}, description = "The name of the room to boost", required = true)
         public String roomName;
 
         public void doRun(String host) throws Exception {
@@ -190,13 +191,13 @@ public class Cli {
     @Command(name = "holiday", description = "Set holiday mode for a room")
     public static class Holiday extends CubeHostCommand {
 
-        @Option(name = { "-r", "--room" } , description = "The name of the room to boost", required = true)
+        @Option(name = {"-r", "--room"}, description = "The name of the room to boost", required = true)
         public String roomName;
 
-        @Option(name = { "-d", "--duration" } , description = "The duration of boosting", required = true)
+        @Option(name = {"-d", "--duration"}, description = "The duration of boosting", required = true)
         public String duration;
 
-        @Option(name = { "-t", "--temperature" } , description = "The temperature in °C", required = true)
+        @Option(name = {"-t", "--temperature"}, description = "The temperature in °C", required = true)
         public Integer temperature;
 
         public void doRun(String host) throws Exception {
@@ -210,6 +211,28 @@ public class Cli {
                 boolean success = client.holiday(room, endDateTime, temperature);
                 if (!success) {
                     logger.error("Setting holiday interval was not successful!");
+                }
+            }
+        }
+    }
+
+    @Command(name = "manualtemp", description = "Set the temperature for a room (manual mode)")
+    public static class ManualTemperature extends CubeHostCommand {
+
+        @Option(name = {"-r", "--room"}, description = "The name of the room to boost", required = true)
+        public String roomName;
+
+        @Option(name = {"-t", "--temperature"}, description = "The temperature in °C in '.5'-steps from 0 to 31.",
+            required = true)
+        public Double temperature;
+
+        public void doRun(String host) throws Exception {
+            try (CubeClient client = new SocketCubeClient(host)) {
+                Cube cube = client.connect();
+                Room room = cube.findRoom(roomName);
+                boolean success = client.setManualTemp(room, temperature);
+                if (!success) {
+                    logger.error("Executing manualtemp call was not successful!");
                 }
             }
         }
@@ -238,8 +261,10 @@ public class Cli {
     }
 
     @Command(name = "info", description = "Return some standard information about the cube. Alias for `report cli`")
-    public static class Info extends AbstractCliReport {}
+    public static class Info extends AbstractCliReport {
+    }
 
     @Command(name = "cli", description = "Return some standard information about the cube to the terminal")
-    public static class ReportCli extends AbstractCliReport {}
+    public static class ReportCli extends AbstractCliReport {
+    }
 }

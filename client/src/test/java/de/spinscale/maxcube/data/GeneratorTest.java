@@ -174,4 +174,30 @@ public class GeneratorTest extends CubeTestCase {
         String output = Generator.writeHolidayRequest(room, dateTime, 19);
         assertThat(output, is(expectedOutput));
     }
+
+    @Test
+    public void testSetTemperatureRequest() throws IOException {
+        Room room = new Room(1, "foo", 123456);
+        room.getDevices().add(new Device(DeviceType.THERMOSTAST, "foo", "serial", 1039085));
+
+        assertThat("Illegal temperature set", testTemperatureBounds(room, -1));
+        assertThat("Illegal temperature set", testTemperatureBounds(room, 32));
+        assertThat("Illegal temperature set", testTemperatureBounds(room, 18.8));
+        assertThat("Illegal temperature set", testTemperatureBounds(room, 18.3));
+
+        String output = Generator.writeSetTemperatureRequest(room, 17.5);
+        assertThat(output, is("s:AARAAAAAD9rtAWM="));
+    }
+
+    private boolean testTemperatureBounds(Room room, double temp) throws IOException {
+        boolean exceptionWasThrown = false;
+        try{
+            Generator.writeSetTemperatureRequest(room, temp);
+        }
+        catch(IllegalArgumentException e){
+            exceptionWasThrown = true;
+        }
+        return exceptionWasThrown;
+    }
+
 }

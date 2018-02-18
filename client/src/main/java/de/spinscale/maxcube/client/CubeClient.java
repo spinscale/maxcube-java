@@ -40,4 +40,12 @@ public interface CubeClient extends Closeable {
      * @return              true if the command was send successfully, false otherwise
      */
     boolean holiday(Room room, LocalDateTime endTime, int temperature) throws Exception;
+
+    /**
+     * Sets manually the temperature for a room
+     * @param room          The room to set the temperature
+     * @param temperature   The target temperature in degrees celsius
+     * @return              true if the command was send successfully, false otherwise
+     */
+    boolean setManualTemp(Room room, double temperature) throws Exception;
 }

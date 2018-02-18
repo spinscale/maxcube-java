@@ -5,7 +5,7 @@
     <parent>
         <groupId>de.spinscale.maxcube</groupId>
         <artifactId>maxcube</artifactId>
-        <version>${version}</version>
+        <version>0.0.2-SNAPSHOT</version>
     </parent>
 
     <artifactId>cli</artifactId>
@@ -15,7 +15,7 @@
         <dependency>
             <groupId>de.spinscale.maxcube</groupId>
             <artifactId>client</artifactId>
-            <version>${version}</version>
+            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>io.airlift</groupId>

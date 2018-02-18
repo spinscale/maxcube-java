@@ -149,4 +149,9 @@ public class MinaCubeClient implements CubeClient {
             session.closeNow();
         }
     }
+
+    @Override
+    public boolean setManualTemp(Room room, double temperature) throws Exception {
+        return false;
+    }
 }

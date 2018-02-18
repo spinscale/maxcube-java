@@ -89,6 +89,12 @@ public class SocketCubeClient implements CubeClient {
         return this.sendSetTemperatureRequest(data);
     }
 
+    @Override
+    public boolean setManualTemp(Room room, double temperature) throws Exception {
+        String data = Generator.writeSetTemperatureRequest(room, temperature);
+        return this.sendSetTemperatureRequest(data);
+    }
+
     private boolean sendSetTemperatureRequest(String base64encodedData) throws Exception {
         String dataToSend = base64encodedData + "\r\n";
         socket.getOutputStream().write(dataToSend.getBytes(UTF_8));
